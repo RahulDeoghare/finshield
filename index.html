@@ -38,7 +38,7 @@
     <!-- ======================= scanner ======================= -->
     <section class="card scan-card" aria-label="Scanner">
       <h2 class="card-title">Check a link or message</h2>
-      <p class="card-sub">Paste a payment link, loan offer, SMS, or email. Analysis runs <strong>on your device</strong> — nothing is uploaded.</p>
+      <p class="card-sub">Paste a payment link, loan offer, SMS, WhatsApp message, or email. Analysis runs <strong>on your device</strong> — nothing is uploaded.</p>
 
       <div class="input-wrap">
         <textarea id="inputText" rows="5" placeholder="Paste the suspicious link or full message here…" autocomplete="off" spellcheck="false" enterkeyhint="go"></textarea>
@@ -118,9 +118,19 @@
       </div>
       <div class="setting-row">
         <div>
-          <strong>Scan from your share menu</strong>
-          <p>Install the app, then share any SMS, email, or link to <em>FinShield</em> from the share sheet — it's scanned instantly and you're alerted if it's a scam.</p>
+          <strong>Scan straight from WhatsApp</strong>
+          <p>Install the app, then long-press any WhatsApp message (or SMS, email, link) → <em>Share</em> → <em>FinShield</em>. It's scanned instantly and you're alerted if it's a scam. On iPhone, copy the message and use the toggle below instead.</p>
         </div>
+      </div>
+      <div class="setting-row">
+        <div>
+          <strong>Auto-check copied text</strong>
+          <p>Copy a suspicious message in any app, then open FinShield — it's scanned automatically, no pasting needed.</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="clipToggle" />
+          <span class="slider"></span>
+        </label>
       </div>
       <button id="testNotifBtn" class="btn btn-ghost" hidden>Send test alert</button>
     </section>
@@ -156,6 +166,10 @@
       <details>
         <summary>📱 Apps only from official stores</summary>
         <p>APK files sent on WhatsApp/SMS bypass security checks. Fake "support" and loan apps read your messages to steal OTPs and contacts.</p>
+      </details>
+      <details>
+        <summary>💬 WhatsApp's favourite scams</summary>
+        <p>"Hi mum, this is my new number" + an urgent transfer, job offers that start with a group-invite link, and "I sent my 6-digit code to you by mistake — send it back" (that code hands over your WhatsApp account). Share any of these to FinShield before replying.</p>
       </details>
     </section>
 

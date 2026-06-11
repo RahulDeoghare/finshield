@@ -25,6 +25,7 @@ const historyCard = $('historyCard');
 const historyList = $('historyList');
 const notifToggle = $('notifToggle');
 const testNotifBtn = $('testNotifBtn');
+const clipToggle = $('clipToggle');
 const installBtn = $('installBtn');
 const toast = $('toast');
 
@@ -32,7 +33,7 @@ const RING_CIRC = 2 * Math.PI * 52;
 const HISTORY_KEY = 'finshield-history';
 const SETTINGS_KEY = 'finshield-settings';
 
-const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{"notify":false}');
+const settings = { notify: false, clipWatch: false, lastClip: '', ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') };
 const saveSettings = () => localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 
 /* ------------------------------------------------------------------ utils */
@@ -307,6 +308,47 @@ $('exampleChips').addEventListener('click', (e) => {
   runScan({ fromShare: true });
 })();
 
+/* ------------------------------------------------------------------ clipboard auto-scan */
+/* The closest a web app can get to background WhatsApp scanning without the
+   share sheet: copy a message anywhere → open FinShield → it's scanned with
+   no pasting. See BACKGROUND.md for the full pipeline and platform limits. */
+const clipHash = (s) => {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+};
+
+async function clipboardSweep() {
+  if (!settings.clipWatch || !navigator.clipboard?.readText) return;
+  let text;
+  try { text = (await navigator.clipboard.readText()).trim(); } catch { return; } // no permission / no focus
+  if (!text || text.length < 8) return;
+  const h = clipHash(text);
+  if (h === settings.lastClip) return; // this copy was already scanned
+  const current = inputText.value.trim();
+  if (current && clipHash(current) !== h) return; // don't clobber a scan in progress
+  settings.lastClip = h;
+  saveSettings();
+  inputText.value = text;
+  inputText.dispatchEvent(new Event('input'));
+  showToast('Auto-scanned the text you copied');
+  runScan({ silent: true, fromShare: true }); // fromShare → notify if it's a scam
+}
+
+clipToggle.addEventListener('change', () => {
+  settings.clipWatch = clipToggle.checked;
+  saveSettings();
+  if (clipToggle.checked) {
+    showToast('Copied text is now checked whenever you open FinShield');
+    clipboardSweep(); // user gesture → browser shows the clipboard permission prompt now
+  }
+});
+
+window.addEventListener('focus', clipboardSweep);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') clipboardSweep();
+});
+
 /* ------------------------------------------------------------------ install */
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -335,5 +377,7 @@ notifToggle.checked = settings.notify && typeof Notification !== 'undefined'
   && Notification.permission === 'granted';
 settings.notify = notifToggle.checked;
 testNotifBtn.hidden = !settings.notify;
+clipToggle.checked = !!settings.clipWatch;
 
 renderHistory();
+if (document.hasFocus()) clipboardSweep();

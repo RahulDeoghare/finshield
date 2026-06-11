@@ -44,6 +44,7 @@ const BRANDS = [
   { name: 'netbanking', official: [] },
   { name: 'amazon',   official: ['amazon.com', 'amazon.in'] },
   { name: 'rbi',      official: ['rbi.org.in'] },
+  { name: 'whatsapp', official: ['whatsapp.com', 'wa.me'] },
 ];
 
 const SHORTENERS = new Set([
@@ -164,7 +165,7 @@ const TEXT_RULES = [
   },
   {
     id: 'task-job-scam', points: 16, severity: 'medium',
-    re: /\b(?:part[- ]?time\sjob|work\sfrom\shome|simple\stasks?|like\s(?:and\s)?subscribe|rate\s(?:hotels?|products?)|telegram)\b[^.!?\n]{0,60}?\b(?:earn|salary|income|₹|rs\.?|\$)\b/gi,
+    re: /\b(?:part[- ]?time\sjob|work\sfrom\shome|simple\stasks?|like\s(?:and\s)?subscribe|rate\s(?:hotels?|products?)|telegram|whats\s?app\s(?:group|job))\b[^.!?\n]{0,60}?\b(?:earn|salary|income|₹|rs\.?|\$)\b/gi,
     title: 'Task-based job scam pattern',
     detail: 'Pay-per-task "jobs" (liking videos, rating hotels) pay small amounts first, then demand deposits for "bigger tasks" — that deposit is what they steal.',
   },
@@ -182,7 +183,7 @@ const TEXT_RULES = [
   },
   {
     id: 'secrecy', points: 12, severity: 'medium',
-    re: /\b(?:do\s?n[o']t\s(?:tell|inform|share\sthis\swith)\s(?:any\s?one|anybody|family|your)|keep\s(?:this\s)?(?:confidential|secret)|between\sus)\b/gi,
+    re: /\b(?:do\s?n[o']t\s(?:tell|inform|share\sthis\swith)\s(?:any\s?one|anybody|family|your|dad|daddy|mom|mum|mummy|papa)|keep\s(?:this\s)?(?:confidential|secret)|between\sus)\b/gi,
     title: 'Asks you to keep it secret',
     detail: 'Scammers isolate victims so nobody can warn them. Any money matter you\'re told to hide from family or your bank is a fraud.',
   },
@@ -197,6 +198,18 @@ const TEXT_RULES = [
     re: /\bupi:\/\/(?:pay|collect)[^\s]*/gi,
     title: 'Direct UPI payment link',
     detail: 'This link opens your UPI app with a pre-filled payment. Only proceed if you initiated this and know exactly who is receiving the money.',
+  },
+  {
+    id: 'family-impersonation', points: 28, severity: 'high',
+    re: /\b(?:hi|hey|hello)\s*,?\s+(?:mum|mom|mommy|mummy|dad|daddy|papa|mama|beta)\b|\bthis\sis\smy\s(?:new|temporary)\s(?:number|phone)\b|\b(?:lost|broke|dropped|damaged)\smy\sphone\b[^.!?\n]{0,60}?\b(?:new\s?number|whatsapp|message\sme)\b/gi,
+    title: '"Hi mum, this is my new number" impersonation',
+    detail: 'The family-emergency WhatsApp scam: a stranger poses as your child or relative on a "new number", then asks for an urgent transfer. Always verify by calling the person\'s original number before sending anything.',
+  },
+  {
+    id: 'wa-code-hijack', points: 35, severity: 'high',
+    re: /\b(?:whatsapp|verification|6[- ]?digit)\s?code\b[^.!?\n]{0,70}?\b(?:send|share|forward|give)\b[^.!?\n]{0,25}?\b(?:it\s)?(?:back|me|us|here)\b|\b(?:send|share|forward|give)\b[^.!?\n]{0,30}?\b(?:me|us|back)\b[^.!?\n]{0,30}?\bcode\b|\b(?:accidentally|by\smistake|mistakenly)\b[^.!?\n]{0,40}?\b(?:sent|send|forwarded?)\b[^.!?\n]{0,40}?\b(?:code|otp)\b|\b(?:sent|forwarded)\b[^.!?\n]{0,40}?\b(?:code|otp)\b[^.!?\n]{0,40}?\b(?:by\smistake|accidentally|mistakenly)\b/gi,
+    title: 'WhatsApp verification-code theft',
+    detail: '"I sent my code to your number by mistake — please send it back" is how WhatsApp accounts get stolen. That 6-digit SMS code is the login key to YOUR account; sharing it hands your WhatsApp (and every group you\'re in) to the scammer.',
   },
 ];
 
@@ -262,6 +275,26 @@ function severityFor(points) {
   return points >= 25 ? 'high' : points >= 12 ? 'medium' : 'low';
 }
 
+/* WhatsApp chat exports & multi-message copies prefix every line with
+   "12/05/26, 10:31 pm - Name:" (Android) or "[10:31, 12/05/2026] Name:" (iOS).
+   Strip those prefixes so the rules run on the message text itself. */
+const WA_LINE_PREFIX = /^(?:\[?\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4},?\s+\d{1,2}:\d{2}(?::\d{2})?\s?(?:[APap]\.?[Mm]\.?)?\]?|\[?\d{1,2}:\d{2}(?:\s?[APap][Mm])?,\s+\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}\]?)\s*[-–—]?\s*(?:[^:\n]{1,40}:\s)?/;
+
+function stripWhatsAppChat(text) {
+  const lines = text.split('\n');
+  let hits = 0;
+  const cleaned = lines.map((line) => {
+    const m = line.match(WA_LINE_PREFIX);
+    if (m && m[0].length > 6 && m[0].length < line.length) {
+      hits += 1;
+      return line.slice(m[0].length);
+    }
+    return line;
+  });
+  // only treat as a chat when ≥2 lines match, so dates in normal text are left alone
+  return hits >= 2 ? cleaned.join('\n') : null;
+}
+
 // ---------------------------------------------------------------- URL checks
 
 function analyzeUrl({ raw, href, parsed, schemeExplicit }) {
@@ -307,6 +340,18 @@ function analyzeUrl({ raw, href, parsed, schemeExplicit }) {
   if (parsed.port && !['', '80', '443'].includes(parsed.port)) {
     add('odd-port', 12, `Unusual port number :${parsed.port}`,
       'Legitimate banking sites run on standard web ports. A custom port usually means a makeshift or compromised server.');
+  }
+
+  // WhatsApp links: the platform itself is legitimate, but these links are
+  // how scammers funnel victims into chats and groups they control.
+  if (domain === 'whatsapp.com' || domain === 'wa.me') {
+    if (host === 'chat.whatsapp.com') {
+      add('wa-group-invite', 16, 'WhatsApp group invite link',
+        'Unsolicited group invites are how investment-tip, trading, and task-job scams recruit victims. Joining also exposes your number and profile photo to everyone running the scam.');
+    } else if (domain === 'wa.me' || host === 'api.whatsapp.com') {
+      add('wa-click-chat', 10, 'Opens a WhatsApp chat with an unknown number',
+        'This "click to chat" link starts a WhatsApp conversation with a number you don\'t know. Scammers prefer moving you to WhatsApp because it bypasses SMS spam filters and hides their identity.');
+    }
   }
 
   if (!trusted && !isIp) {
@@ -379,10 +424,23 @@ function analyzeUrl({ raw, href, parsed, schemeExplicit }) {
 // ---------------------------------------------------------------- main entry
 
 export function analyze(text) {
-  const trimmed = text.trim();
+  let trimmed = text.trim();
   const findings = [];
   const highlights = [];
   const positives = [];
+
+  // WhatsApp chat copies: strip timestamp/sender prefixes so rules and
+  // highlight offsets work on the actual message content.
+  const waChat = stripWhatsAppChat(trimmed);
+  if (waChat !== null) {
+    trimmed = waChat;
+    findings.push({
+      id: 'wa-chat-parsed', points: 0, severity: 'low',
+      title: 'WhatsApp chat detected',
+      detail: 'Timestamps and sender names were removed automatically and every message in the copied chat was scanned.',
+      evidence: null,
+    });
+  }
 
   // --- text rules
   for (const rule of TEXT_RULES) {
@@ -467,6 +525,14 @@ export const EXAMPLES = [
   {
     label: 'UPI refund trap',
     text: 'Hello, I accidentally sent you a payment. Please accept the collect request and enter your UPI PIN to receive the refund of Rs 5000. Do it immediately, I am in hospital.',
+  },
+  {
+    label: 'WhatsApp job offer',
+    text: 'Hello! I am Priya from TalentFirst HR 🌟 We offer part-time work from home — earn ₹3000 to ₹8000 daily for simple tasks like rating hotels online. No experience needed! Limited seats, join our WhatsApp group today: https://chat.whatsapp.com/KxT4mP2vR8s',
+  },
+  {
+    label: '"Hi mum" scam',
+    text: 'Hi mum, I dropped my phone in water so this is my new number 😞 I need to pay my hostel fee today itself but my banking app is locked. Can you transfer Rs 15,000 to my friend\'s account? I will return it tomorrow. Please don\'t tell dad, he will worry.',
   },
   {
     label: 'Genuine bank message',

@@ -34,21 +34,23 @@ changes so installed clients pick them up.
 
 ## How "background detection" works (and its limits)
 
-A pure web app cannot read your SMS/email inbox in the background — browsers
-don't expose that, by design. FinShield gets as close as the web platform
-allows:
+See **[BACKGROUND.md](BACKGROUND.md)** for the full pipeline. Short version —
+a web app cannot read your WhatsApp/SMS inbox by itself (browsers forbid it by
+design), so FinShield hooks the moments the platform does allow:
 
-- **Share target**: once installed, FinShield appears in the Android share
-  sheet. Share any SMS/email/link to it → it launches, scans instantly, and
-  fires a notification if it's a scam.
-- **Local alerts**: scans that detect a scam while the app is backgrounded
-  trigger a service-worker notification.
+- **Share target (Android)**: long-press a WhatsApp message → Share →
+  FinShield → instant scan + notification if it's a scam.
+- **Clipboard auto-scan**: opt-in toggle; copy a message anywhere, open
+  FinShield, it's scanned with no pasting.
+- **Local alerts**: medium/high verdicts from share/clipboard scans fire a
+  service-worker notification; tapping it focuses the app.
 - **Web Push**: `sw.js` already handles `push` events. To send real server
   pushes (e.g. fleet-wide scam-pattern alerts), add a backend with VAPID keys
   and call `registration.pushManager.subscribe()` in `app.js`.
 
-For true automatic inbox scanning you'd need a companion browser extension
-(content script watching Gmail) or a native Android app with SMS permissions.
+WhatsApp-specific detection: `wa.me` / `chat.whatsapp.com` link checks,
+"Hi mum new number", verification-code theft, job-offer groups, and automatic
+stripping of `[12/05/26, 10:31] Name:` prefixes when a whole chat is pasted.
 
 ## Adding detection rules
 
