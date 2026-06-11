@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>FinShield — Finance Scam Detector</title>
+  <meta name="description" content="Paste a payment link, loan message, or suspicious banking URL and FinShield checks it for fraud patterns — entirely on your device." />
+  <meta name="theme-color" content="#0b1020" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FinShield" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-logo" viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M24 4 L40 10 V22 C40 33 33.5 40.5 24 44 C14.5 40.5 8 33 8 22 V10 Z" fill="url(#lg)"/>
+        <path d="M17 24.5 L22 29.5 L31.5 18.5" fill="none" stroke="#0b1020" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <defs>
+          <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#34e3b0"/><stop offset="1" stop-color="#14b78f"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div>
+        <h1>FinShield</h1>
+        <p>Finance scam detector</p>
+      </div>
+    </div>
+    <button id="installBtn" class="btn btn-ghost" hidden>Install app</button>
+  </header>
+
+  <main>
+    <!-- ======================= scanner ======================= -->
+    <section class="card scan-card" aria-label="Scanner">
+      <h2 class="card-title">Check a link or message</h2>
+      <p class="card-sub">Paste a payment link, loan offer, SMS, or email. Analysis runs <strong>on your device</strong> — nothing is uploaded.</p>
+
+      <div class="input-wrap">
+        <textarea id="inputText" rows="5" placeholder="Paste the suspicious link or full message here…" autocomplete="off" spellcheck="false" enterkeyhint="go"></textarea>
+        <div class="input-tools">
+          <button id="pasteBtn" class="chip-btn" type="button">📋 Paste from clipboard</button>
+          <button id="clearBtn" class="chip-btn" type="button" hidden>✕ Clear</button>
+          <span id="charCount" class="char-count"></span>
+        </div>
+      </div>
+
+      <button id="scanBtn" class="btn btn-primary btn-big" type="button">
+        <span class="scan-label">Scan for scams</span>
+      </button>
+
+      <div class="examples">
+        <span class="examples-label">Try an example:</span>
+        <div id="exampleChips" class="chips"></div>
+      </div>
+    </section>
+
+    <!-- ======================= result ======================= -->
+    <section id="resultSection" class="result" hidden aria-live="polite">
+      <div class="card verdict-card" id="verdictCard">
+        <div class="verdict-top">
+          <div class="ring-wrap">
+            <svg viewBox="0 0 120 120" class="ring">
+              <circle class="ring-track" cx="60" cy="60" r="52"/>
+              <circle id="ringValue" class="ring-value" cx="60" cy="60" r="52"/>
+            </svg>
+            <div class="ring-center">
+              <span id="scoreNum">0</span>
+              <small>risk</small>
+            </div>
+          </div>
+          <div class="verdict-text">
+            <span id="verdictBadge" class="badge">—</span>
+            <p id="verdictBlurb"></p>
+          </div>
+        </div>
+        <div id="positives" class="positives" hidden></div>
+      </div>
+
+      <div class="card" id="previewCard" hidden>
+        <h3 class="card-title-sm">Message with flags highlighted</h3>
+        <p id="messagePreview" class="message-preview"></p>
+      </div>
+
+      <div id="urlCards"></div>
+
+      <div class="card" id="findingsCard" hidden>
+        <h3 class="card-title-sm">What we found <span id="findingsCount" class="count-pill"></span></h3>
+        <ul id="findingsList" class="findings"></ul>
+      </div>
+
+      <div class="card next-steps" id="nextSteps" hidden>
+        <h3 class="card-title-sm">What to do now</h3>
+        <ul>
+          <li>Don't click the link, reply, or call back numbers from the message.</li>
+          <li>Block and report the sender (in India: forward to <strong>1930</strong> helpline / <a href="https://cybercrime.gov.in" target="_blank" rel="noopener">cybercrime.gov.in</a>).</li>
+          <li>If you already shared details, call your bank's official number <em>immediately</em> and freeze the card/account.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ======================= protection ======================= -->
+    <section class="card" aria-label="Protection settings">
+      <h2 class="card-title">Background protection</h2>
+      <div class="setting-row">
+        <div>
+          <strong>Scam alerts</strong>
+          <p>Get a notification when a scan detects a scam — even when the app is in the background.</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="notifToggle" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="setting-row">
+        <div>
+          <strong>Scan from your share menu</strong>
+          <p>Install the app, then share any SMS, email, or link to <em>FinShield</em> from the share sheet — it's scanned instantly and you're alerted if it's a scam.</p>
+        </div>
+      </div>
+      <button id="testNotifBtn" class="btn btn-ghost" hidden>Send test alert</button>
+    </section>
+
+    <!-- ======================= history ======================= -->
+    <section class="card" id="historyCard" hidden aria-label="Recent scans">
+      <div class="row-between">
+        <h2 class="card-title">Recent scans</h2>
+        <button id="clearHistoryBtn" class="chip-btn">Clear</button>
+      </div>
+      <ul id="historyList" class="history"></ul>
+    </section>
+
+    <!-- ======================= tips ======================= -->
+    <section class="card" aria-label="Safety tips">
+      <h2 class="card-title">Know the red flags</h2>
+      <details>
+        <summary>🔑 Nobody legitimate asks for your OTP or PIN</summary>
+        <p>Not your bank, not the police, not "customer support". An OTP is the key to your money — anyone asking for it is stealing from you. This single rule stops most frauds.</p>
+      </details>
+      <details>
+        <summary>⏰ Urgency is a weapon</summary>
+        <p>"Account blocked in 24 hours", "offer expires now" — pressure exists to stop you from thinking or asking someone. Real institutions never need you to panic.</p>
+      </details>
+      <details>
+        <summary>🔗 Check the real domain, not the look</summary>
+        <p>Scam links imitate banks: <code>sbi-verify.xyz</code>, <code>paypa1.com</code>, <code>secure.hdfc.account-check.top</code>. The only part that matters is the last domain before the first "/" — and it must be the bank's own.</p>
+      </details>
+      <details>
+        <summary>💸 You never pay to receive money</summary>
+        <p>No fee unlocks a prize, refund, loan, or parcel. And on UPI, receiving money never requires approving a request or entering your PIN.</p>
+      </details>
+      <details>
+        <summary>📱 Apps only from official stores</summary>
+        <p>APK files sent on WhatsApp/SMS bypass security checks. Fake "support" and loan apps read your messages to steal OTPs and contacts.</p>
+      </details>
+    </section>
+
+    <footer>
+      <p>🔒 100% private — every scan runs locally in your browser. Works offline.</p>
+      <p class="muted">FinShield is a heuristic helper, not a guarantee. When in doubt, contact your bank via the number on the back of your card.</p>
+    </footer>
+  </main>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
