@@ -15,6 +15,7 @@
   --shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
   --appbar-h: calc(56px + env(safe-area-inset-top));
   --nav-h: calc(60px + env(safe-area-inset-bottom));
+  --app-w: 100vw;            /* phone: full bleed */
   color-scheme: dark;
 }
 
@@ -605,11 +606,45 @@ details code {
 .toast.show { transform: translate(-50%, 0); opacity: 1; }
 
 /* ----------------------------- wider screens ----------------------------- */
-@media (min-width: 720px) {
-  .screen-inner { padding-top: 22px; gap: 20px; }
-  .card { padding: 22px; }
-  .verdict-top { gap: 26px; }
-  .ring-wrap { width: 130px; height: 130px; }
+/* On tablet/desktop the app presents as a centered phone-width column with a
+   framed edge, instead of full-width bars floating across an empty window. */
+@media (min-width: 600px) {
+  :root { --app-w: 440px; }
+
+  body {
+    background:
+      radial-gradient(1100px 600px at 50% -10%, rgba(45, 212, 167, 0.10), transparent 60%),
+      #06080f;
+  }
+
+  /* shell collapses to a centered phone-width column */
+  .appbar, .bottom-nav {
+    left: 50%; right: auto;
+    transform: translateX(-50%);
+    width: var(--app-w);
+  }
+  .screens {
+    left: 50%; right: auto;
+    transform: translateX(-50%);
+    width: var(--app-w);
+  }
+
+  /* device frame edges + soft glow */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0; bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: var(--app-w);
+    border-left: 1px solid var(--card-border);
+    border-right: 1px solid var(--card-border);
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .toast { left: 50%; max-width: calc(var(--app-w) - 32px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
