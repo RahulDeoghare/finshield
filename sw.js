@@ -1,5 +1,5 @@
 /* FinShield service worker — offline cache + notifications */
-const CACHE = 'finshield-v3';
+const CACHE = 'finshield-v4';
 const SHELL = [
   './',
   './index.html',

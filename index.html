@@ -2,22 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
   <title>FinShield — Finance Scam Detector</title>
   <meta name="description" content="Paste a payment link, loan message, or suspicious banking URL and FinShield checks it for fraud patterns — entirely on your device." />
   <meta name="theme-color" content="#0b1020" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
   <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="FinShield" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <svg class="brand-logo" viewBox="0 0 48 48" aria-hidden="true">
+  <!-- ======================= splash ======================= -->
+  <div id="splash" class="splash">
+    <svg class="splash-logo" viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M24 4 L40 10 V22 C40 33 33.5 40.5 24 44 C14.5 40.5 8 33 8 22 V10 Z" fill="url(#slg)"/>
+      <path d="M17 24.5 L22 29.5 L31.5 18.5" fill="none" stroke="#0b1020" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <defs>
+        <linearGradient id="slg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#34e3b0"/><stop offset="1" stop-color="#14b78f"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    <span class="splash-name">FinShield</span>
+    <span class="splash-tag">Finance scam detector</span>
+  </div>
+
+  <!-- ======================= top app bar ======================= -->
+  <header class="appbar" id="appbar">
+    <button id="backBtn" class="appbar-icon" type="button" aria-label="Back" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 4.5 8 12l7.5 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="appbar-brand">
+      <svg class="appbar-logo" viewBox="0 0 48 48" aria-hidden="true">
         <path d="M24 4 L40 10 V22 C40 33 33.5 40.5 24 44 C14.5 40.5 8 33 8 22 V10 Z" fill="url(#lg)"/>
         <path d="M17 24.5 L22 29.5 L31.5 18.5" fill="none" stroke="#0b1020" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
         <defs>
@@ -26,158 +46,250 @@
           </linearGradient>
         </defs>
       </svg>
-      <div>
-        <h1>FinShield</h1>
-        <p>Finance scam detector</p>
-      </div>
+      <h1 id="appbarTitle">FinShield</h1>
     </div>
-    <button id="installBtn" class="btn btn-ghost" hidden>Install app</button>
+    <button id="installBtn" class="appbar-icon" type="button" aria-label="Install app" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
   </header>
 
-  <main>
-    <!-- ======================= scanner ======================= -->
-    <section class="card scan-card" aria-label="Scanner">
-      <h2 class="card-title">Check a link or message</h2>
-      <p class="card-sub">Paste a payment link, loan offer, SMS, WhatsApp message, or email. Analysis runs <strong>on your device</strong> — nothing is uploaded.</p>
+  <!-- ======================= screens ======================= -->
+  <div class="screens" id="screens">
 
-      <div class="input-wrap">
-        <textarea id="inputText" rows="5" placeholder="Paste the suspicious link or full message here…" autocomplete="off" spellcheck="false" enterkeyhint="go"></textarea>
-        <div class="input-tools">
-          <button id="pasteBtn" class="chip-btn" type="button">📋 Paste from clipboard</button>
-          <button id="clearBtn" class="chip-btn" type="button" hidden>✕ Clear</button>
-          <span id="charCount" class="char-count"></span>
-        </div>
-      </div>
+    <!-- ----------------------- SCAN ----------------------- -->
+    <section class="screen" id="screen-scan" data-screen="scan">
+      <div class="screen-inner">
 
-      <button id="scanBtn" class="btn btn-primary btn-big" type="button">
-        <span class="scan-label">Scan for scams</span>
-      </button>
-
-      <div class="examples">
-        <span class="examples-label">Try an example:</span>
-        <div id="exampleChips" class="chips"></div>
-      </div>
-    </section>
-
-    <!-- ======================= result ======================= -->
-    <section id="resultSection" class="result" hidden aria-live="polite">
-      <div class="card verdict-card" id="verdictCard">
-        <div class="verdict-top">
-          <div class="ring-wrap">
-            <svg viewBox="0 0 120 120" class="ring">
-              <circle class="ring-track" cx="60" cy="60" r="52"/>
-              <circle id="ringValue" class="ring-value" cx="60" cy="60" r="52"/>
+        <!-- protection hero / dashboard -->
+        <section class="card hero-card">
+          <div class="hero-shield" id="heroShield">
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <path d="M24 4 L40 10 V22 C40 33 33.5 40.5 24 44 C14.5 40.5 8 33 8 22 V10 Z" fill="url(#hlg)"/>
+              <path d="M17 24.5 L22 29.5 L31.5 18.5" fill="none" stroke="#0b1020" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              <defs><linearGradient id="hlg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34e3b0"/><stop offset="1" stop-color="#14b78f"/></linearGradient></defs>
             </svg>
-            <div class="ring-center">
-              <span id="scoreNum">0</span>
-              <small>risk</small>
+          </div>
+          <h2 class="hero-title" id="heroTitle">You're protected</h2>
+          <p class="hero-sub" id="heroSub">On-device scanning is active. Nothing you check ever leaves your phone.</p>
+          <div class="stat-row">
+            <div class="stat"><span class="stat-num" id="statScans">0</span><span class="stat-label">scans</span></div>
+            <div class="stat"><span class="stat-num danger" id="statThreats">0</span><span class="stat-label">threats caught</span></div>
+            <div class="stat"><span class="stat-num" id="statStreak">100%</span><span class="stat-label">on-device</span></div>
+          </div>
+        </section>
+
+        <!-- scanner -->
+        <section class="card scan-card" aria-label="Scanner">
+          <h2 class="card-title">Check a link or message</h2>
+          <p class="card-sub">Paste a payment link, loan offer, SMS, WhatsApp message, or email.</p>
+
+          <div class="input-wrap">
+            <textarea id="inputText" rows="5" placeholder="Paste the suspicious link or full message here…" autocomplete="off" spellcheck="false" enterkeyhint="go"></textarea>
+            <div class="input-tools">
+              <button id="pasteBtn" class="chip-btn ripple" type="button">📋 Paste</button>
+              <button id="clearBtn" class="chip-btn ripple" type="button" hidden>✕ Clear</button>
+              <span id="charCount" class="char-count"></span>
             </div>
           </div>
-          <div class="verdict-text">
-            <span id="verdictBadge" class="badge">—</span>
-            <p id="verdictBlurb"></p>
+
+          <button id="scanBtn" class="btn btn-primary btn-big ripple" type="button">
+            <span class="scan-label">Scan for scams</span>
+          </button>
+
+          <div class="examples">
+            <span class="examples-label">Try an example:</span>
+            <div id="exampleChips" class="chips"></div>
           </div>
-        </div>
-        <div id="positives" class="positives" hidden></div>
-      </div>
+        </section>
 
-      <div class="card" id="previewCard" hidden>
-        <h3 class="card-title-sm">Message with flags highlighted</h3>
-        <p id="messagePreview" class="message-preview"></p>
-      </div>
+        <!-- result -->
+        <section id="resultSection" class="result" hidden aria-live="polite">
+          <div class="card verdict-card" id="verdictCard">
+            <div class="verdict-top">
+              <div class="ring-wrap">
+                <svg viewBox="0 0 120 120" class="ring">
+                  <circle class="ring-track" cx="60" cy="60" r="52"/>
+                  <circle id="ringValue" class="ring-value" cx="60" cy="60" r="52"/>
+                </svg>
+                <div class="ring-center">
+                  <span id="scoreNum">0</span>
+                  <small>risk</small>
+                </div>
+              </div>
+              <div class="verdict-text">
+                <span id="verdictBadge" class="badge">—</span>
+                <p id="verdictBlurb"></p>
+              </div>
+            </div>
+            <div id="positives" class="positives" hidden></div>
+            <div class="verdict-actions">
+              <button id="shareResultBtn" class="chip-btn ripple" type="button">↗ Share result</button>
+              <button id="rescanBtn" class="chip-btn ripple" type="button">↺ New scan</button>
+            </div>
+          </div>
 
-      <div id="urlCards"></div>
+          <div class="card" id="previewCard" hidden>
+            <h3 class="card-title-sm">Message with flags highlighted</h3>
+            <p id="messagePreview" class="message-preview"></p>
+          </div>
 
-      <div class="card" id="findingsCard" hidden>
-        <h3 class="card-title-sm">What we found <span id="findingsCount" class="count-pill"></span></h3>
-        <ul id="findingsList" class="findings"></ul>
-      </div>
+          <div id="urlCards"></div>
 
-      <div class="card next-steps" id="nextSteps" hidden>
-        <h3 class="card-title-sm">What to do now</h3>
-        <ul>
-          <li>Don't click the link, reply, or call back numbers from the message.</li>
-          <li>Block and report the sender (in India: forward to <strong>1930</strong> helpline / <a href="https://cybercrime.gov.in" target="_blank" rel="noopener">cybercrime.gov.in</a>).</li>
-          <li>If you already shared details, call your bank's official number <em>immediately</em> and freeze the card/account.</li>
-        </ul>
+          <div class="card" id="findingsCard" hidden>
+            <h3 class="card-title-sm">What we found <span id="findingsCount" class="count-pill"></span></h3>
+            <ul id="findingsList" class="findings"></ul>
+          </div>
+
+          <div class="card next-steps" id="nextSteps" hidden>
+            <h3 class="card-title-sm">What to do now</h3>
+            <ul>
+              <li>Don't click the link, reply, or call back numbers from the message.</li>
+              <li>Block and report the sender (in India: forward to <strong>1930</strong> helpline / <a href="https://cybercrime.gov.in" target="_blank" rel="noopener">cybercrime.gov.in</a>).</li>
+              <li>If you already shared details, call your bank's official number <em>immediately</em> and freeze the card/account.</li>
+            </ul>
+          </div>
+        </section>
       </div>
     </section>
 
-    <!-- ======================= protection ======================= -->
-    <section class="card" aria-label="Protection settings">
-      <h2 class="card-title">Background protection</h2>
-      <div class="setting-row">
-        <div>
-          <strong>Scam alerts</strong>
-          <p>Get a notification when a scan detects a scam — even when the app is in the background.</p>
+    <!-- ----------------------- HISTORY ----------------------- -->
+    <section class="screen" id="screen-history" data-screen="history" hidden>
+      <div class="screen-inner">
+        <div class="row-between section-head">
+          <h2 class="screen-title">Recent scans</h2>
+          <button id="clearHistoryBtn" class="chip-btn ripple" hidden>Clear all</button>
         </div>
-        <label class="switch">
-          <input type="checkbox" id="notifToggle" />
-          <span class="slider"></span>
-        </label>
-      </div>
-      <div class="setting-row">
-        <div>
-          <strong>Scan straight from WhatsApp</strong>
-          <p>Install the app, then long-press any WhatsApp message (or SMS, email, link) → <em>Share</em> → <em>FinShield</em>. It's scanned instantly and you're alerted if it's a scam. On iPhone, copy the message and use the toggle below instead.</p>
+        <ul id="historyList" class="history"></ul>
+        <div id="historyEmpty" class="empty-state">
+          <div class="empty-icon">🗂️</div>
+          <p class="empty-title">No scans yet</p>
+          <p class="empty-sub">Messages and links you check will appear here. Your history stays on this device.</p>
+          <button class="btn btn-primary ripple" data-go="scan">Scan something</button>
         </div>
       </div>
-      <div class="setting-row">
-        <div>
-          <strong>Auto-check copied text</strong>
-          <p>Copy a suspicious message in any app, then open FinShield — it's scanned automatically, no pasting needed.</p>
-        </div>
-        <label class="switch">
-          <input type="checkbox" id="clipToggle" />
-          <span class="slider"></span>
-        </label>
+    </section>
+
+    <!-- ----------------------- LEARN ----------------------- -->
+    <section class="screen" id="screen-learn" data-screen="learn" hidden>
+      <div class="screen-inner">
+        <h2 class="screen-title">Know the red flags</h2>
+        <section class="card">
+          <details>
+            <summary>🔑 Nobody legitimate asks for your OTP or PIN</summary>
+            <p>Not your bank, not the police, not "customer support". An OTP is the key to your money — anyone asking for it is stealing from you. This single rule stops most frauds.</p>
+          </details>
+          <details>
+            <summary>⏰ Urgency is a weapon</summary>
+            <p>"Account blocked in 24 hours", "offer expires now" — pressure exists to stop you from thinking or asking someone. Real institutions never need you to panic.</p>
+          </details>
+          <details>
+            <summary>🔗 Check the real domain, not the look</summary>
+            <p>Scam links imitate banks: <code>sbi-verify.xyz</code>, <code>paypa1.com</code>, <code>secure.hdfc.account-check.top</code>. The only part that matters is the last domain before the first "/" — and it must be the bank's own.</p>
+          </details>
+          <details>
+            <summary>💸 You never pay to receive money</summary>
+            <p>No fee unlocks a prize, refund, loan, or parcel. And on UPI, receiving money never requires approving a request or entering your PIN.</p>
+          </details>
+          <details>
+            <summary>📱 Apps only from official stores</summary>
+            <p>APK files sent on WhatsApp/SMS bypass security checks. Fake "support" and loan apps read your messages to steal OTPs and contacts.</p>
+          </details>
+          <details>
+            <summary>💬 WhatsApp's favourite scams</summary>
+            <p>"Hi mum, this is my new number" + an urgent transfer, job offers that start with a group-invite link, and "I sent my 6-digit code to you by mistake — send it back" (that code hands over your WhatsApp account). Share any of these to FinShield before replying.</p>
+          </details>
+        </section>
+
+        <h2 class="screen-title">If you've already been scammed</h2>
+        <section class="card next-steps static">
+          <ul>
+            <li>Call your bank's official number (on the back of your card) and freeze the card/account immediately.</li>
+            <li>In India, report within the golden hour: dial <strong>1930</strong> or file at <a href="https://cybercrime.gov.in" target="_blank" rel="noopener">cybercrime.gov.in</a>.</li>
+            <li>Change passwords for any account whose details you shared, and enable two-factor authentication.</li>
+            <li>If you installed an APK or gave remote access, disconnect from the internet and uninstall it; consider a factory reset.</li>
+          </ul>
+        </section>
       </div>
-      <button id="testNotifBtn" class="btn btn-ghost" hidden>Send test alert</button>
     </section>
 
-    <!-- ======================= history ======================= -->
-    <section class="card" id="historyCard" hidden aria-label="Recent scans">
-      <div class="row-between">
-        <h2 class="card-title">Recent scans</h2>
-        <button id="clearHistoryBtn" class="chip-btn">Clear</button>
+    <!-- ----------------------- SETTINGS ----------------------- -->
+    <section class="screen" id="screen-settings" data-screen="settings" hidden>
+      <div class="screen-inner">
+        <h2 class="screen-title">Background protection</h2>
+        <section class="card">
+          <div class="setting-row">
+            <div>
+              <strong>Scam alerts</strong>
+              <p>Get a notification when a scan detects a scam — even when the app is in the background.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="notifToggle" />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <div>
+              <strong>Auto-check copied text</strong>
+              <p>Copy a suspicious message in any app, then open FinShield — it's scanned automatically, no pasting needed.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="clipToggle" />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <div>
+              <strong>Haptic feedback</strong>
+              <p>Vibrate on taps and when a scam is detected.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="hapticToggle" />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <button id="testNotifBtn" class="btn btn-ghost ripple" hidden>Send test alert</button>
+        </section>
+
+        <h2 class="screen-title">Scan from other apps</h2>
+        <section class="card">
+          <div class="setting-row no-border">
+            <div>
+              <strong>Share to FinShield</strong>
+              <p>Install the app, then long-press any WhatsApp message (or SMS, email, link) → <em>Share</em> → <em>FinShield</em>. It's scanned instantly and you're alerted if it's a scam. On iPhone, copy the message and turn on auto-check above.</p>
+            </div>
+          </div>
+          <button id="installBtn2" class="btn btn-primary ripple" hidden>Install FinShield</button>
+        </section>
+
+        <h2 class="screen-title">About</h2>
+        <section class="card about-card">
+          <p class="about-line">🔒 <strong>100% private.</strong> Every scan runs locally in your browser. Works offline.</p>
+          <p class="about-line muted">FinShield is a heuristic helper, not a guarantee. When in doubt, contact your bank via the number on the back of your card.</p>
+          <p class="about-version" id="aboutVersion">FinShield · on-device engine</p>
+        </section>
       </div>
-      <ul id="historyList" class="history"></ul>
     </section>
+  </div>
 
-    <!-- ======================= tips ======================= -->
-    <section class="card" aria-label="Safety tips">
-      <h2 class="card-title">Know the red flags</h2>
-      <details>
-        <summary>🔑 Nobody legitimate asks for your OTP or PIN</summary>
-        <p>Not your bank, not the police, not "customer support". An OTP is the key to your money — anyone asking for it is stealing from you. This single rule stops most frauds.</p>
-      </details>
-      <details>
-        <summary>⏰ Urgency is a weapon</summary>
-        <p>"Account blocked in 24 hours", "offer expires now" — pressure exists to stop you from thinking or asking someone. Real institutions never need you to panic.</p>
-      </details>
-      <details>
-        <summary>🔗 Check the real domain, not the look</summary>
-        <p>Scam links imitate banks: <code>sbi-verify.xyz</code>, <code>paypa1.com</code>, <code>secure.hdfc.account-check.top</code>. The only part that matters is the last domain before the first "/" — and it must be the bank's own.</p>
-      </details>
-      <details>
-        <summary>💸 You never pay to receive money</summary>
-        <p>No fee unlocks a prize, refund, loan, or parcel. And on UPI, receiving money never requires approving a request or entering your PIN.</p>
-      </details>
-      <details>
-        <summary>📱 Apps only from official stores</summary>
-        <p>APK files sent on WhatsApp/SMS bypass security checks. Fake "support" and loan apps read your messages to steal OTPs and contacts.</p>
-      </details>
-      <details>
-        <summary>💬 WhatsApp's favourite scams</summary>
-        <p>"Hi mum, this is my new number" + an urgent transfer, job offers that start with a group-invite link, and "I sent my 6-digit code to you by mistake — send it back" (that code hands over your WhatsApp account). Share any of these to FinShield before replying.</p>
-      </details>
-    </section>
-
-    <footer>
-      <p>🔒 100% private — every scan runs locally in your browser. Works offline.</p>
-      <p class="muted">FinShield is a heuristic helper, not a guarantee. When in doubt, contact your bank via the number on the back of your card.</p>
-    </footer>
-  </main>
+  <!-- ======================= bottom navigation ======================= -->
+  <nav class="bottom-nav" id="bottomNav" aria-label="Main navigation">
+    <button class="nav-item ripple active" data-nav="scan" aria-label="Scan">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4a7 7 0 1 0 4.9 12l4.1 4.1m-9-4.1a7 7 0 0 1 0-12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Scan</span>
+    </button>
+    <button class="nav-item ripple" data-nav="history" aria-label="History">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v5l3 2M3.5 12a8.5 8.5 0 1 0 2.5-6m-2.5-3v3h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>History</span>
+    </button>
+    <button class="nav-item ripple" data-nav="learn" aria-label="Learn">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2 2 0 0 1 6 4h5v15H6a2 2 0 0 0-2 2zM20 5.5A2 2 0 0 0 18 4h-5v15h5a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Learn</span>
+    </button>
+    <button class="nav-item ripple" data-nav="settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1M18.7 18.7l-2.1-2.1M7.4 7.4 5.3 5.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Settings</span>
+    </button>
+  </nav>
 
   <div id="toast" class="toast" role="status"></div>
 
