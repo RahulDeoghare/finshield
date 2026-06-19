@@ -539,3 +539,15 @@ export const EXAMPLES = [
     text: 'Your a/c X1234 is debited for Rs 499.00 on 11-06-26 (UPI Ref 615243). If not done by you, call 1800 1234 from your registered mobile or visit https://www.hdfcbank.com',
   },
 ];
+
+/* Additive helper for the browser extension's auto-scan: is this page's own
+   domain a known-official finance domain? Used to skip warning on the user's
+   real bank/payment sites. Does not affect analyze(); pure reuse of the
+   existing TRUSTED_DOMAINS + registeredDomain(). */
+export function isTrustedPage(urlString) {
+  try {
+    return TRUSTED_DOMAINS.has(registeredDomain(new URL(urlString).hostname));
+  } catch {
+    return false;
+  }
+}

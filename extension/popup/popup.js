@@ -65,6 +65,18 @@ chips.addEventListener('click', (e) => {
   runScan();
 });
 
+/* auto-scan on/off toggle (default on), persisted in chrome.storage.local */
+const autoScan = $('autoScan');
+(async () => {
+  try {
+    const s = await chrome.storage.local.get('autoScan');
+    autoScan.checked = s.autoScan !== false;
+  } catch { /* keep default on */ }
+})();
+autoScan.addEventListener('change', () => {
+  chrome.storage.local.set({ autoScan: autoScan.checked });
+});
+
 /* if opened from the right-click "Scan with FinShield" menu, the background
    worker left the text here — pick it up, scan, and clear the badge */
 (async () => {

@@ -20,6 +20,13 @@
     "service_worker": "background.js",
     "type": "module"
   },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/autoscan.js"],
+      "run_at": "document_idle"
+    }
+  ],
   "permissions": ["contextMenus", "storage", "activeTab"],
   "browser_specific_settings": {
     "gecko": {
