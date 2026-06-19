@@ -9,6 +9,11 @@
   if (window.__finshieldAutoScan) return;
   window.__finshieldAutoScan = true;
 
+  // these hosts have dedicated per-message adapters (Phase 3) — let them
+  // handle warnings so we don't show a page banner *and* inline chips
+  const ADAPTER_HOSTS = ['web.whatsapp.com', 'mail.google.com'];
+  if (ADAPTER_HOSTS.includes(location.hostname)) return;
+
   const BANNER_THRESHOLD = 25;      // matches the engine's "Suspicious" cutoff
   const MAX_TEXT = 20000;           // cap page text so huge pages stay fast
   const MAX_LINKS = 300;

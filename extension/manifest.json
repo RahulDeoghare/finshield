@@ -25,6 +25,16 @@
       "matches": ["<all_urls>"],
       "js": ["content/autoscan.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://web.whatsapp.com/*"],
+      "js": ["content/sites/adapter-core.js", "content/sites/whatsapp.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["content/sites/adapter-core.js", "content/sites/gmail.js"],
+      "run_at": "document_idle"
     }
   ],
   "permissions": ["contextMenus", "storage", "activeTab"],

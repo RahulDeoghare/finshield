@@ -62,19 +62,28 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return; // no response needed
   }
 
+  // adapters (per-message scans) set the toolbar badge themselves
+  if (msg?.type === 'setBadge') {
+    setBadge(sender.tab?.id, msg.level);
+    return;
+  }
+
   if (msg?.type === 'scan') {
     const tabId = sender.tab?.id;
     const url = sender.tab?.url || '';
+    const wantBadge = msg.badge !== false;
 
-    // never flag the user's real bank / payment site
-    if (url && isTrustedPage(url)) {
-      setBadge(tabId, 'low');
+    // page-level auto-scan never flags the user's real bank / payment site.
+    // per-message adapters pass skipTrusted (the page host is google.com etc.,
+    // which is trusted, but the message content still needs scanning).
+    if (!msg.skipTrusted && url && isTrustedPage(url)) {
+      if (wantBadge) setBadge(tabId, 'low');
       sendResponse({ trusted: true });
       return;
     }
 
     const r = analyze(msg.text || '');
-    setBadge(tabId, r.verdict.level);
+    if (wantBadge) setBadge(tabId, r.verdict.level);
     sendResponse({
       score: r.score,
       level: r.verdict.level,
