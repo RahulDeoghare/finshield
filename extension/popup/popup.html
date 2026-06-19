@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinShield</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header class="topbar">
+    <img src="../icons/icon-192.png" alt="" class="logo" />
+    <div>
+      <h1>FinShield</h1>
+      <p class="tagline">On-device scam &amp; phishing check</p>
+    </div>
+  </header>
+
+  <main>
+    <div class="input-wrap">
+      <textarea id="input" rows="4"
+        placeholder="Paste a suspicious message, payment link, or banking URL…"></textarea>
+      <div class="input-row">
+        <span id="charCount" class="char-count"></span>
+        <div class="input-actions">
+          <button id="pasteBtn" class="btn ghost" type="button">Paste</button>
+          <button id="clearBtn" class="btn ghost" type="button" hidden>Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <button id="scanBtn" class="btn primary" type="button">Scan for scams</button>
+
+    <div class="examples">
+      <span class="examples-label">Try an example:</span>
+      <div id="chips" class="chips"></div>
+    </div>
+
+    <section id="result" class="result" hidden></section>
+  </main>
+
+  <label class="toggle-row" for="autoScan">
+    <div>
+      <span class="toggle-title">Auto-scan pages</span>
+      <span class="toggle-sub">Warn me when a page I open looks like a scam</span>
+    </div>
+    <span class="switch"><input type="checkbox" id="autoScan" checked /><span class="track"></span></span>
+  </label>
+
+  <footer class="foot">Nothing you scan ever leaves your browser.</footer>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
