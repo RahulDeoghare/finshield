@@ -1,0 +1,18 @@
+{
+  "name": "finshield-extension",
+  "version": "0.1.0",
+  "description": "FinShield — on-device scam & phishing detector browser extension",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:firefox": "node scripts/build.mjs firefox",
+    "build:chrome": "node scripts/build.mjs chrome",
+    "lint:firefox": "npm run build:firefox && web-ext lint -s dist/firefox",
+    "pack:firefox": "npm run build:firefox && web-ext build -s dist/firefox -a dist -o",
+    "run:firefox": "npm run build:firefox && web-ext run -s dist/firefox"
+  },
+  "devDependencies": {
+    "web-ext": "^8.3.0"
+  }
+}
